@@ -1,0 +1,17 @@
+# This file was automatically generated! Do not modify...
+
+cmake_minimum_required (VERSION 2.8)
+
+list(APPEND sources "${CMAKE_SOURCE_DIR}/cli/dev/src/all.cpp")
+{%CPPFILES%}
+
+add_executable({%NAME%} ${sources} "") 
+
+make_project({%NAME%})
+
+include_directories("${CMAKE_SOURCE_DIR}/include/")
+include_directories("${CMAKE_SOURCE_DIR}/cli/include")
+include_directories("${CMAKE_SOURCE_DIR}/cli/dev/include")
+
+add_custom_command(TARGET {%NAME%} POST_BUILD 
+	COMMAND "${CMAKE_COMMAND}" -E copy \"$<TARGET_FILE:{%NAME%}>\" "${CMAKE_SOURCE_DIR}/lib/" ) 

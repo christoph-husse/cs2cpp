@@ -1,0 +1,79 @@
+# M.I.T. License - http://opensource.org/licenses/mit-license.php/
+# 
+# Copyright (c) 2012 Christoph Husse
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, 
+# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
+# TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+# CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
+# 
+
+cmake_minimum_required (VERSION 2.8)
+cmake_policy(VERSION 2.8)
+
+project (Cs2CppFramework)
+
+# detect whether we build for 32-bit or 64-bit you can later test for this with "if(Is64Bit)"
+IF (CMAKE_SIZEOF_VOID_P EQUAL 8)
+   set(IS64BIT 1)
+ELSE()
+   set(IS64BIT 0)
+ENDIF()
+
+# do some tweaking depending on platform and build system.
+# See also: http://www.openguru.com/2009/04/cmake-detecting-platformoperating.html
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+	set(PLATFORM "PLATFORM_LINUX")
+
+	if(CMAKE_COMPILER_IS_GNUCXX)
+		add_definitions(-std=c++0x -w)
+	endif()
+
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+
+	set(PLATFORM "PLATFORM_WINDOWS")
+	
+	configure_msvc_runtime()
+	
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	
+	set(PLATFORM "PLATFORM_MACOS")
+	
+ELSE()
+	message(FATAL "Unrecognized operating system ""${CMAKE_SYSTEM_NAME}""!") 
+ENDIF()
+
+
+MACRO (ADD_PCH_RULE  _header_filename _src_list)
+	SET(_gch_filename "${_header_filename}.gch")
+	LIST(APPEND ${_src_list} ${_gch_filename})
+	SET (_args ${CMAKE_CXX_FLAGS})
+	LIST(APPEND _args -c ${_header_filename} -o ${_gch_filename})
+	GET_DIRECTORY_PROPERTY(DIRINC INCLUDE_DIRECTORIES)
+	foreach (_inc ${DIRINC})
+		LIST(APPEND _args "-I" ${_inc})
+	endforeach(_inc ${DIRINC})
+	SEPARATE_ARGUMENTS(_args)
+	add_custom_command(OUTPUT ${_gch_filename}
+		   COMMAND rm -f ${_gch_filename}
+		   COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
+			    DEPENDS ${_header_filename})
+ENDMACRO(ADD_PCH_RULE _header_filename _src_list)
+
+
+
+# construct canonical path to source directory
+get_filename_component(SRCDIR "${CMAKE_SOURCE_DIR}" REALPATH)
+set(SRCDIR "${SRCDIR}/")
+	   
+# traverse source tree
+add_subdirectory(src)
